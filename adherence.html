@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://www.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Medicine Dispenser · Adherence Log &amp; Analytics</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    box-sizing:border-box;
+    --bg:#F8FAFC; --surface:#FFFFFF; --ink:#0F172A; --ink-soft:#475569; --ink-faint:#94A3B8;
+    --line:#E2E8F0; --primary:#0284C7; --primary-soft:#0EA5E9; --primary-tint:#E0F2FE;
+    --success:#10B981; --success-tint:#D1FAE5; --warning:#F59E0B; --warning-tint:#FEF3C7;
+    --danger:#EF4444; --danger-tint:#FEE2E2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px;}
+  .pulse-dot{position:relative;width:9px;height:9px;border-radius:50%;background:var(--success);}
+  .pulse-dot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--success);animation:pulse-ring 1.8s cubic-bezier(0.4,0,0.6,1) infinite;}
+  @keyframes pulse-ring{0%{transform:scale(1);opacity:0.7;}100%{transform:scale(2.6);opacity:0;}}
+  .nav-link{position:relative;color:var(--ink-faint);transition:color .15s ease;white-space:nowrap;padding:12px 0;font-weight:600;font-size:14px;border-bottom:2px solid transparent;}
+  .nav-link.active{color:var(--primary);border-bottom-color:var(--primary);}
+  .nav-link:hover{color:var(--primary);}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;}
+  .badge-success{background:var(--success-tint);color:#047857;}
+  .badge-warning{background:var(--warning-tint);color:#B45309;}
+  .badge-danger{background:var(--danger-tint);color:#B91C1C;}
+  .badge-info{background:var(--primary-tint);color:#0369A1;}
+  .slot-pill{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;font-size:12px;font-weight:700;background:var(--primary-tint);color:var(--primary);}
+  table.log-table thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);font-weight:700;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);}
+  table.log-table tbody td{padding:12px 14px;font-size:13.5px;color:var(--ink);border-bottom:1px solid #F1F5F9;}
+  table.log-table tbody tr:last-child td{border-bottom:none;}
+  table.log-table tbody tr:hover{background:#F8FAFC;}
+  @media (max-width: 640px){ table.log-table{font-size:12px;} }
+</style>
+</head>
+<body class="min-h-screen">
+<header class="sticky top-0 z-40 backdrop-blur bg-white/90 border-b border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <a href="index.html" class="flex items-center gap-3 min-w-0">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);">
+        <i data-lucide="pill" class="w-5 h-5 text-white"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-[15px] sm:text-base font-bold leading-tight truncate">Smart Medicine Dispenser</h1>
+        <p class="text-[11px] text-slate-400 leading-tight -mt-0.5 hidden sm:block">IoT System · Remote Care Console</p>
+      </div>
+    </a>
+    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full pl-2.5 pr-3 py-1.5">
+        <span class="pulse-dot" id="connection-dot"></span>
+        <span class="text-xs font-semibold text-slate-600 hidden sm:inline">Firebase Status:</span>
+        <span class="text-xs font-bold text-emerald-600" id="connection-status">Connecting...</span>
+      </div>
+      <div class="hidden md:flex items-center gap-1.5 text-xs text-slate-400 mono">
+        <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+        <span id="live-clock">--:--:--</span>
+      </div>
+    </div>
+  </div>
+  <nav class="max-w-7xl mx-auto px-4 sm:px-6 overflow-x-auto">
+    <div class="flex gap-6">
+      <a href="index.html" class="nav-link">Overview</a>
+      <a href="schedule.html" class="nav-link">Timer &amp; Schedule Setup</a>
+      <a href="adherence.html" class="nav-link active">Adherence Log &amp; Analytics</a>
+      <a href="hardware.html" class="nav-link">Project Info &amp; Hardware</a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+  <div class="mb-6">
+    <h2 class="text-lg font-bold mb-1">Adherence Log &amp; Analytics</h2>
+    <p class="text-sm text-slate-400">Tracks when medicines were taken or missed.</p>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="card stat-card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Today's adherence rate</span>
+        <i data-lucide="heart-pulse" class="w-4 h-4 text-emerald-500"></i>
+      </div>
+      <div class="flex items-end gap-2">
+        <span class="text-3xl font-extrabold" style="color:var(--success);">92%</span>
+        <span class="badge badge-success mb-1"><i data-lucide="arrow-up" class="w-3 h-3"></i> 4%</span>
+      </div>
+      <p class="text-xs text-slate-400 mt-2">vs. 88% last week</p>
+    </div>
+    <div class="card stat-card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Doses taken on time</span>
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-sky-500"></i>
+      </div>
+      <div class="flex items-end gap-2">
+        <span class="text-3xl font-extrabold text-slate-800">23</span>
+        <span class="text-sm text-slate-400 mb-1">/ 25 doses</span>
+      </div>
+      <p class="text-xs text-slate-400 mt-2">This week, across 4 slots</p>
+    </div>
+    <div class="card stat-card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Missed doses</span>
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+      </div>
+      <div class="flex items-end gap-2">
+        <span class="text-3xl font-extrabold" style="color:var(--warning);">2</span>
+        <span class="badge badge-warning mb-1">Caretaker notified</span>
+      </div>
+      <p class="text-xs text-slate-400 mt-2">Last missed: Tue, 8:00 PM</p>
+    </div>
+  </div>
+
+  <!-- Weekly Compliance Graph Card -->
+  <div class="card p-5 sm:p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="text-base font-bold">Weekly compliance</h3>
+        <p class="text-xs text-slate-400">Pill ingestion history · last 7 days</p>
+      </div>
+      <div class="flex gap-1.5 bg-slate-50 border border-slate-200 rounded-lg p-1">
+        <button id="chart-bar-btn" class="chart-toggle text-xs font-semibold px-2.5 py-1 rounded-md transition" data-type="bar">Bar</button>
+        <button id="chart-line-btn" class="chart-toggle text-xs font-semibold px-2.5 py-1 rounded-md transition" data-type="line">Line</button>
+      </div>
+    </div>
+    <div style="position: relative; width: 100%; height: 280px;">
+      <canvas id="adherenceChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <div class="px-5 sm:px-6 pt-5 pb-3">
+      <h3 class="text-base font-bold">Activity timeline</h3>
+      <p class="text-xs text-slate-400">Live event log from IR sensors and dispenser acknowledgements</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="log-table w-full min-w-[620px]">
+        <thead><tr><th>Timestamp</th><th>Medicine</th><th>Slot</th><th>Status</th><th>Caretaker alert</th></tr></thead>
+        <tbody id="activity-log"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer class="max-w-7xl mx-auto px-4 sm:px-6 pb-8 pt-2">
+  <p class="text-xs text-slate-400 text-center">Smart Medicine Dispenser · IoT System Dashboard · Built for evaluation &amp; demonstration</p>
+</footer>
+
+<!-- Firebase -->
+<script src="firebase-config.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+  const firebaseConfig = window.FIREBASE_CONFIG;
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const connectedRef = ref(db, ".info/connected");
+  onValue(connectedRef, (snap) => {
+    const statusEl = document.getElementById('connection-status');
+    if (snap.val() === true) {
+      if(statusEl) {
+        statusEl.textContent = "Online";
+        statusEl.className = "text-xs font-bold text-emerald-600";
+      }
+    } else {
+      if(statusEl) {
+        statusEl.textContent = "Offline";
+        statusEl.className = "text-xs font-bold text-rose-600";
+      }
+    }
+  });
+</script>
+
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<script>
+lucide.createIcons();
+function tick(){ const el = document.getElementById('live-clock'); if(el) el.textContent = new Date().toLocaleTimeString('en-GB'); }
+tick(); setInterval(tick, 1000);
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+const activity = [
+  {time:'Today, 08:02 AM', med:'Metformin 500mg', slot:1, status:'taken', note:'Taken via IR Sensor', alert:'None'},
+  {time:'Today, 01:05 PM', med:'Amlodipine 5mg', slot:2, status:'dispensed', note:'Dispensed & Acknowledged', alert:'None'},
+  {time:'Yesterday, 08:15 PM', med:'Cough Syrup', slot:3, status:'missed', note:'Missed', alert:'SMS sent'},
+  {time:'Yesterday, 09:00 AM', med:'Vitamin D3', slot:4, status:'taken', note:'Taken via IR Sensor', alert:'None'},
+  {time:'Tue, 08:00 PM', med:'Cough Syrup', slot:3, status:'missed', note:'Missed', alert:'App push sent'},
+  {time:'Tue, 08:01 AM', med:'Metformin 500mg', slot:1, status:'taken', note:'Taken via IR Sensor', alert:'None'},
+];
+
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function statusBadge(status, note){
+  note = esc(note);
+  const map = {
+    taken:      '<span class="badge badge-success"><i data-lucide="check" class="w-3 h-3"></i> '+note+'</span>',
+    dispensed:  '<span class="badge badge-info"><i data-lucide="package-check" class="w-3 h-3"></i> '+note+'</span>',
+    missed:     '<span class="badge badge-danger"><i data-lucide="x" class="w-3 h-3"></i> '+note+'</span>',
+  };
+  return map[status] || note;
+}
+
+function renderActivity(){
+  const tbody = document.getElementById('activity-log');
+  tbody.innerHTML = activity.map(a=>
+    '<tr><td class="mono text-slate-500 whitespace-nowrap">'+esc(a.time)+'</td>'+
+    '<td class="font-semibold">'+esc(a.med)+'</td>'+
+    '<td><span class="slot-pill">'+esc(a.slot)+'</span></td>'+
+    '<td>'+statusBadge(a.status, a.note)+'</td>'+
+    '<td class="text-slate-500">'+(a.alert === 'None' ? '<span class="text-slate-300">—</span>' : esc(a.alert))+'</td></tr>'
+  ).join('');
+  lucide.createIcons();
+}
+renderActivity();
+
+const ctx = document.getElementById('adherenceChart').getContext('2d');
+const chartData = {
+  labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+  datasets: [
+    {label:'Doses taken on time', data:[4,3,4,4,3,4,4], backgroundColor:'#0EA5E9', borderColor:'#0284C7', borderRadius:6, tension:0.35, fill:true},
+    {label:'Missed doses', data:[0,1,0,0,1,0,0], backgroundColor:'#F59E0B', borderColor:'#F59E0B', borderRadius:6, tension:0.35}
+  ]
+};
+
+let adherenceChart = new Chart(ctx, {
+  type:'bar', 
+  data: JSON.parse(JSON.stringify(chartData)),
+  options:{ 
+    responsive: true, 
+    maintainAspectRatio: false,
+    plugins:{ 
+      legend:{ position:'bottom', labels:{ usePointStyle:true, boxWidth:8, font:{size:11}, color:'#64748B' } }, 
+      tooltip:{ backgroundColor:'#0F172A', padding:10, cornerRadius:8 } 
+    },
+    scales:{ 
+      x:{ grid:{display:false}, ticks:{color:'#94A3B8', font:{size:11}} }, 
+      y:{ beginAtZero:true, max:5, grid:{color:'#F1F5F9'}, ticks:{stepSize:1, color:'#94A3B8', font:{size:11}} } 
+    }
+  }
+});
+
+function setChartType(type){
+  document.querySelectorAll('.chart-toggle').forEach(b=>{
+    if(b.dataset.type === type){ b.style.background = '#0284C7'; b.style.color = '#fff'; }
+    else { b.style.background = 'transparent'; b.style.color = '#64748B'; }
+  });
+  adherenceChart.destroy();
+  const cfg = JSON.parse(JSON.stringify(chartData));
+  if(type === 'line'){ 
+    cfg.datasets.forEach(d=>{ 
+      d.backgroundColor = d.borderColor + '22'; 
+      d.pointRadius = 4; 
+      d.pointBackgroundColor = d.borderColor; 
+    }); 
+  }
+  adherenceChart = new Chart(ctx, { 
+    type, 
+    data: cfg, 
+    options:{
+      responsive: true, 
+      maintainAspectRatio: false,
+      plugins:{ 
+        legend:{ position:'bottom', labels:{ usePointStyle:true, boxWidth:8, font:{size:11}, color:'#64748B' } }, 
+        tooltip:{ backgroundColor:'#0F172A', padding:10, cornerRadius:8 } 
+      },
+      scales:{ 
+        x:{ grid:{display:false}, ticks:{color:'#94A3B8', font:{size:11}} }, 
+        y:{ beginAtZero:true, max:5, grid:{color:'#F1F5F9'}, ticks:{stepSize:1, color:'#94A3B8', font:{size:11}} } 
+      }
+    }
+  });
+}
+
+document.getElementById('chart-bar-btn').addEventListener('click', ()=> setChartType('bar'));
+document.getElementById('chart-line-btn').addEventListener('click', ()=> setChartType('line'));
+setChartType('bar');
+</script>
+</body>
+</html>

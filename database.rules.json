@@ -1,0 +1,31 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "schedules": {
+      ".read": "auth != null && (auth.uid === 'REPLACE_WITH_CAREGIVER_UID' || auth.uid === 'REPLACE_WITH_DEVICE_UID')",
+      "$slot": {
+        ".write": "auth != null && auth.uid === 'REPLACE_WITH_CAREGIVER_UID'",
+        ".validate": "$slot.matches(/^slot_[1-4]$/) && newData.hasChildren(['medicine','time','slot']) && $slot === 'slot_' + newData.child('slot').val()",
+        "medicine": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60" },
+        "time": { ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)" },
+        "slot": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 4" },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "activity_logs": {
+      ".read": "auth != null && auth.uid === 'REPLACE_WITH_CAREGIVER_UID'",
+      "$id": {
+        ".write": "auth != null && auth.uid === 'REPLACE_WITH_DEVICE_UID' && !data.exists()",
+        ".validate": "newData.hasChildren(['slot','status','note','alert'])",
+        "slot": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 4" },
+        "status": { ".validate": "newData.val() == 'taken' || newData.val() == 'missed'" },
+        "note": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "alert": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://www.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Medicine Dispenser · Project Info &amp; Hardware</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    box-sizing:border-box;
+    --bg:#F8FAFC; --surface:#FFFFFF; --ink:#0F172A; --ink-soft:#475569; --ink-faint:#94A3B8;
+    --line:#E2E8F0; --primary:#0284C7; --primary-soft:#0EA5E9; --primary-tint:#E0F2FE;
+    --success:#10B981; --success-tint:#D1FAE5; --warning:#F59E0B; --warning-tint:#FEF3C7;
+    --danger:#EF4444; --danger-tint:#FEE2E2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px;}
+  .pulse-dot{position:relative;width:9px;height:9px;border-radius:50%;background:var(--success);}
+  .pulse-dot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--success);animation:pulse-ring 1.8s cubic-bezier(0.4,0,0.6,1) infinite;}
+  @keyframes pulse-ring{0%{transform:scale(1);opacity:0.7;}100%{transform:scale(2.6);opacity:0;}}
+  .nav-link{position:relative;color:var(--ink-faint);transition:color .15s ease;white-space:nowrap;padding:12px 0;font-weight:600;font-size:14px;border-bottom:2px solid transparent;}
+  .nav-link.active{color:var(--primary);border-bottom-color:var(--primary);}
+  .nav-link:hover{color:var(--primary);}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;}
+  .btn-primary{background:var(--primary);color:#fff;font-weight:600;transition:background .15s ease, transform .1s ease;}
+  .btn-primary:hover{background:#0369A1;}
+  .btn-primary:active{transform:scale(0.98);}
+  input[type=text], input[type=time], select{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--ink);width:100%;transition:border-color .15s ease, box-shadow .15s ease;}
+  input[type=text]:focus, input[type=time]:focus, select:focus{outline:none;border-color:var(--primary-soft);box-shadow:0 0 0 3px var(--primary-tint);}
+  label.field-label{font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;display:block;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;}
+  .badge-success{background:var(--success-tint);color:#047857;}
+  .badge-warning{background:var(--warning-tint);color:#B45309;}
+  .badge-danger{background:var(--danger-tint);color:#B91C1C;}
+  .badge-info{background:var(--primary-tint);color:#0369A1;}
+  .slot-pill{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;font-size:12px;font-weight:700;background:var(--primary-tint);color:var(--primary);}
+  #toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-140%);transition:transform .35s cubic-bezier(.65,0,.35,1);z-index:60;}
+  #toast.show{transform:translateX(-50%) translateY(0);}
+
+  .hw-card-image{width:100%;height:180px;display:flex;align-items:center;justify-content:center;background:#F8FAFC;border-bottom:1px solid var(--line);overflow:hidden;padding:10px;}
+  .hw-card-image img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;}
+  .hw-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--primary-tint);color:var(--primary);flex-shrink:0;}
+  table.log-table thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);font-weight:700;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);}
+  table.log-table tbody td{padding:12px 14px;font-size:13.5px;color:var(--ink);border-bottom:1px solid #F1F5F9;}
+  table.log-table tbody tr:last-child td{border-bottom:none;}
+  table.log-table tbody tr:hover{background:#F8FAFC;}
+  @media (max-width: 640px){ table.log-table{font-size:12px;} }
+</style>
+</head>
+<body class="min-h-screen">
+<header class="sticky top-0 z-40 backdrop-blur bg-white/90 border-b border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <a href="index.html" class="flex items-center gap-3 min-w-0">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);">
+        <i data-lucide="pill" class="w-5 h-5 text-white"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-[15px] sm:text-base font-bold leading-tight truncate">Smart Medicine Dispenser</h1>
+        <p class="text-[11px] text-slate-400 leading-tight -mt-0.5 hidden sm:block">IoT System · Remote Care Console</p>
+      </div>
+    </a>
+    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full pl-2.5 pr-3 py-1.5">
+        <span class="pulse-dot"></span>
+        <span class="text-xs font-semibold text-slate-600 hidden sm:inline">ESP32 Status:</span>
+        <span class="text-xs font-bold text-emerald-600">Connected</span>
+      </div>
+      <div class="hidden md:flex items-center gap-1.5 text-xs text-slate-400 mono">
+        <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+        <span id="live-clock">--:--:--</span>
+      </div>
+    </div>
+  </div>
+  <nav class="max-w-7xl mx-auto px-4 sm:px-6 overflow-x-auto">
+    <div class="flex gap-6">
+      <a href="index.html" class="nav-link">Overview</a>
+      <a href="schedule.html" class="nav-link">Timer &amp; Schedule Setup</a>
+      <a href="adherence.html" class="nav-link">Adherence Log &amp; Analytics</a>
+      <a href="hardware.html" class="nav-link active">Project Info &amp; Hardware</a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+  <div class="mb-6">
+    <h2 class="text-lg font-bold mb-1">Project Information &amp; Hardware</h2>
+    <p class="text-sm text-slate-400">Documentation, schematics, and software details for project evaluation.</p>
+  </div>
+
+  <div class="mb-6">
+    <h3 class="text-base font-bold mb-1">Hardware architecture</h3>
+    <p class="text-sm text-slate-400">Core components powering the dispenser's sensing, actuation and alerting.</p>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="hw-grid"></div>
+
+  <div class="mb-6">
+    <h3 class="text-base font-bold mb-1">Schematic &amp; PCB showcase</h3>
+    <p class="text-sm text-slate-400">Design files produced in KiCad for the dispenser's control board.</p>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+    <div class="card overflow-hidden">
+      <div class="h-56 bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100">
+        <img src="sch.png" alt="KiCad Schematic Design" class="w-full h-full object-contain p-2">
+      </div>
+      <div class="p-4 sm:p-5">
+        <h4 class="font-bold text-sm mb-1.5">KiCad schematic design</h4>
+        <p class="text-sm text-slate-500 leading-relaxed">Maps the signal path from the ESP32's GPIO pins through the ULN2003 driver to the 28BYJ-48 stepper, alongside the I2C bus feeding the LCD and the IR receiver / buzzer interrupt lines used for dose confirmation and alerts.</p>
+      </div>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="h-56 bg-slate-900 overflow-hidden flex items-center justify-center border-b border-slate-100">
+        <img src="pcb.png" alt="KiCad PCB Layout" class="w-full h-full object-contain p-2">
+      </div>
+      <div class="p-4 sm:p-5">
+        <h4 class="font-bold text-sm mb-1.5">KiCad PCB layout</h4>
+        <p class="text-sm text-slate-500 leading-relaxed">Two-layer board with isolated power traces for the stepper driver, ground-plane pour for noise reduction around the IR sensor, and labeled footprints for the ESP32 dev module, LCD header, and screw terminals.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-8">
+    <h3 class="text-base font-bold mb-1">Software &amp; tech stack</h3>
+    <p class="text-sm text-slate-400 mb-4">The layers connecting hardware events to this dashboard.</p>
+    <div class="card p-5 sm:p-6">
+      <div class="flex flex-wrap gap-2.5" id="tech-badges"></div>
+    </div>
+  </div>
+
+  <!-- TEAM Section -->
+  <div>
+    <h3 class="text-base font-bold mb-1">TEAM</h3>
+    <p class="text-sm text-slate-400 mb-4">Contributors and team behind the Smart Medicine Dispenser project.</p>
+    <div class="card overflow-hidden p-4 sm:p-6 flex flex-col items-center">
+      <img src="fr.png" alt="Project Team" class="w-full max-w-3xl h-auto rounded-lg object-cover">
+      <div class="mt-4 pt-3 border-t border-slate-100 w-full max-w-3xl text-center">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-0.5">Team Name</span>
+        <h4 class="text-lg font-extrabold tracking-tight text-sky-600 mono">AURORA SYNCERS</h4>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="max-w-7xl mx-auto px-4 sm:px-6 pb-8 pt-6">
+  <p class="text-xs text-slate-400 text-center">Smart Medicine Dispenser · IoT System Dashboard · Built for evaluation &amp; demonstration</p>
+</footer>
+
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<script>
+lucide.createIcons();
+function tick(){ const el = document.getElementById('live-clock'); if(el) el.textContent = new Date().toLocaleTimeString('en-GB'); }
+tick(); setInterval(tick, 1000);
+function showToast(msg){
+  const toast = document.getElementById('toast');
+  if(!toast) return;
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=> toast.classList.remove('show'), 2600);
+}
+</script>
+
+<script>
+const hardware = [
+  {image:'images/esp32.jpg', icon:'cpu', name:'ESP32 Microcontroller', desc:'Wi-Fi + BLE MCU running the firmware, scheduling logic and MQTT client.'},
+  {image:'images/uln2003.jpg', icon:'settings-2', name:'ULN2003 Driver Module', desc:'Drives the stepper motor used to rotate the pill carousel and align the correct compartment.'},
+  {image:'images/lcd.jpg', icon:'monitor', name:'I2C LCD Display', desc:'Shows the next scheduled dose, time remaining, and system status on-device.'},
+  {image:'images/ir_sensor.jpg', icon:'scan-eye', name:'IR Sensor', desc:'Detects pill fall-through at the dispensing chute to confirm dispensing.'},
+  {image:'images/buzzer_led.jpg', icon:'bell-ring', name:'Buzzer & LED Alarms', desc:'Provides audible and visual alerts at dose time and for missed doses.'},
+  {image:'images/power_supply.jpg', icon:'battery-charging', name:'Power Supply Unit', desc:'Regulated 5V/3.3V rails supplying the MCU, driver, and peripherals.'},
+];
+document.getElementById('hw-grid').innerHTML = hardware.map(h=>
+  '<div class="card overflow-hidden">'+
+    (h.image ? '<div class="hw-card-image"><img src="'+h.image+'" alt="'+h.name+'"></div>' : '')+
+    '<div class="p-4 flex items-start gap-3">'+
+      '<div class="hw-icon"><i data-lucide="'+h.icon+'" class="w-5 h-5"></i></div>'+
+      '<div class="min-w-0"><h3 class="font-bold text-sm mb-1">'+h.name+'</h3>'+
+      '<p class="text-xs text-slate-500 leading-relaxed">'+h.desc+'</p></div>'+
+    '</div>'+
+  '</div>'
+).join('');
+
+
+const tech = [
+  {icon:'code-2', label:'Arduino C++'},
+  {icon:'radio', label:'ESP32 Firmware'},
+  {icon:'flame', label:'Firebase Realtime DB'},
+  {icon:'network', label:'MQTT Protocol'},
+  {icon:'layout-dashboard', label:'HTML / JS Dashboard'},
+  {icon:'palette', label:'Tailwind CSS'},
+  {icon:'bar-chart-3', label:'Chart.js'},
+];
+document.getElementById('tech-badges').innerHTML = tech.map(t=>
+  '<span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold" style="background:#F0F9FF;color:#0369A1;border:1px solid #BAE6FD;">'+
+  '<i data-lucide="'+t.icon+'" class="w-4 h-4"></i> '+t.label+'</span>'
+).join('');
+lucide.createIcons();
+</script>
+</body>
+</html>

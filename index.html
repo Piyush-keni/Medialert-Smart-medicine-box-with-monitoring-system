@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://www.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Medicine Dispenser · Overview</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    box-sizing:border-box;
+    --bg:#F8FAFC; --surface:#FFFFFF; --ink:#0F172A; --ink-soft:#475569; --ink-faint:#94A3B8;
+    --line:#E2E8F0; --primary:#0284C7; --primary-soft:#0EA5E9; --primary-tint:#E0F2FE;
+    --success:#10B981; --success-tint:#D1FAE5; --warning:#F59E0B; --warning-tint:#FEF3C7;
+    --danger:#EF4444; --danger-tint:#FEE2E2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px;}
+  .pulse-dot{position:relative;width:9px;height:9px;border-radius:50%;background:var(--success);}
+  .pulse-dot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--success);animation:pulse-ring 1.8s cubic-bezier(0.4,0,0.6,1) infinite;}
+  @keyframes pulse-ring{0%{transform:scale(1);opacity:0.7;}100%{transform:scale(2.6);opacity:0;}}
+  .nav-link{position:relative;color:var(--ink-faint);transition:color .15s ease;white-space:nowrap;padding:12px 0;font-weight:600;font-size:14px;border-bottom:2px solid transparent;}
+  .nav-link.active{color:var(--primary);border-bottom-color:var(--primary);}
+  .nav-link:hover{color:var(--primary);}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;}
+  .btn-primary{background:var(--primary);color:#fff;font-weight:600;transition:background .15s ease, transform .1s ease;}
+  .btn-primary:hover{background:#0369A1;}
+  .btn-primary:active{transform:scale(0.98);}
+  input[type=text], input[type=time], select{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--ink);width:100%;transition:border-color .15s ease, box-shadow .15s ease;}
+  input[type=text]:focus, input[type=time]:focus, select:focus{outline:none;border-color:var(--primary-soft);box-shadow:0 0 0 3px var(--primary-tint);}
+  label.field-label{font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;display:block;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;}
+  .badge-success{background:var(--success-tint);color:#047857;}
+  .badge-warning{background:var(--warning-tint);color:#B45309;}
+  .badge-danger{background:var(--danger-tint);color:#B91C1C;}
+  .badge-info{background:var(--primary-tint);color:#0369A1;}
+  .slot-pill{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;font-size:12px;font-weight:700;background:var(--primary-tint);color:var(--primary);}
+  #toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-140%);transition:transform .35s cubic-bezier(.65,0,.35,1);z-index:60;}
+  #toast.show{transform:translateX(-50%) translateY(0);}
+  .hw-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--primary-tint);color:var(--primary);flex-shrink:0;}
+  .schema-box{background:linear-gradient(135deg, rgba(2,132,199,.05) 25%, transparent 25%) -10px 0/20px 20px,linear-gradient(225deg, rgba(2,132,199,.05) 25%, transparent 25%) -10px 0/20px 20px,linear-gradient(315deg, rgba(2,132,199,.05) 25%, transparent 25%) 0 0/20px 20px,linear-gradient(45deg, rgba(2,132,199,.05) 25%, transparent 25%) 0 0/20px 20px,#F0F9FF;border:1.5px dashed #7DD3FC;}
+  table.log-table thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);font-weight:700;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);}
+  table.log-table tbody td{padding:12px 14px;font-size:13.5px;color:var(--ink);border-bottom:1px solid #F1F5F9;}
+  table.log-table tbody tr:last-child td{border-bottom:none;}
+  table.log-table tbody tr:hover{background:#F8FAFC;}
+  @media (max-width: 640px){ table.log-table{font-size:12px;} }
+</style>
+</head>
+<body class="min-h-screen">
+<header class="sticky top-0 z-40 backdrop-blur bg-white/90 border-b border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <a href="index.html" class="flex items-center gap-3 min-w-0">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);">
+        <i data-lucide="pill" class="w-5 h-5 text-white"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-[15px] sm:text-base font-bold leading-tight truncate">Smart Medicine Dispenser</h1>
+        <p class="text-[11px] text-slate-400 leading-tight -mt-0.5 hidden sm:block">IoT System · Remote Care Console</p>
+      </div>
+    </a>
+    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full pl-2.5 pr-3 py-1.5">
+        <span class="pulse-dot" id="connection-dot"></span>
+        <span class="text-xs font-semibold text-slate-600 hidden sm:inline">Firebase Status:</span>
+        <span class="text-xs font-bold text-emerald-600" id="connection-status">Connecting...</span>
+      </div>
+      <div class="hidden md:flex items-center gap-1.5 text-xs text-slate-400 mono">
+        <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+        <span id="live-clock">--:--:--</span>
+      </div>
+    </div>
+  </div>
+  <nav class="max-w-7xl mx-auto px-4 sm:px-6 overflow-x-auto">
+    <div class="flex gap-6">
+      <a href="index.html" class="nav-link active">Overview</a>
+      <a href="schedule.html" class="nav-link">Timer &amp; Schedule Setup</a>
+      <a href="adherence.html" class="nav-link">Adherence Log &amp; Analytics</a>
+      <a href="hardware.html" class="nav-link">Project Info &amp; Hardware</a>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+  <div class="text-center max-w-2xl mx-auto mb-10">
+    <div class="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);">
+      <i data-lucide="pill" class="w-7 h-7 text-white"></i>
+    </div>
+    <h2 class="text-2xl sm:text-3xl font-extrabold mb-2">Remote Care Console</h2>
+    <p class="text-slate-500">Monitor, schedule, and review your Smart Medicine Dispenser from one dashboard. Choose a section below to get started.</p>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+    <a href="schedule.html" class="card p-6 hover:shadow-md transition-shadow group">
+      <div class="hw-icon mb-4"><i data-lucide="calendar-clock" class="w-5 h-5"></i></div>
+      <h3 class="font-bold mb-1.5 group-hover:text-sky-600">Timer &amp; Schedule Setup</h3>
+      <p class="text-sm text-slate-500 leading-relaxed">Configure medication times and compartments that sync directly with the ESP32.</p>
+    </a>
+    <a href="adherence.html" class="card p-6 hover:shadow-md transition-shadow group">
+      <div class="hw-icon mb-4"><i data-lucide="activity" class="w-5 h-5"></i></div>
+      <h3 class="font-bold mb-1.5 group-hover:text-sky-600">Adherence Log &amp; Analytics</h3>
+      <p class="text-sm text-slate-500 leading-relaxed">Track adherence rate, review weekly compliance charts, and see the live activity timeline.</p>
+    </a>
+    <a href="hardware.html" class="card p-6 hover:shadow-md transition-shadow group">
+      <div class="hw-icon mb-4"><i data-lucide="cpu" class="w-5 h-5"></i></div>
+      <h3 class="font-bold mb-1.5 group-hover:text-sky-600">Project Info &amp; Hardware</h3>
+      <p class="text-sm text-slate-500 leading-relaxed">Hardware architecture, KiCad schematic/PCB showcase, and the software tech stack.</p>
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10">
+    <div class="card stat-card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Today's adherence</span>
+        <i data-lucide="heart-pulse" class="w-4 h-4 text-emerald-500"></i>
+      </div>
+      <span class="text-3xl font-extrabold" style="color:var(--success);">92%</span>
+    </div>
+    <div class="card stat-card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Active reminders</span>
+        <i data-lucide="calendar-clock" class="w-4 h-4 text-sky-500"></i>
+      </div>
+      <span class="text-3xl font-extrabold text-slate-800">4</span>
+    </div>
+    <div class="card stat-card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Missed this week</span>
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+      </div>
+      <span class="text-3xl font-extrabold" style="color:var(--warning);">2</span>
+    </div>
+  </div>
+</main>
+
+<footer class="max-w-7xl mx-auto px-4 sm:px-6 pb-8 pt-2">
+  <p class="text-xs text-slate-400 text-center">Smart Medicine Dispenser · IoT System Dashboard · Built for evaluation &amp; demonstration</p>
+</footer>
+
+<!-- Firebase -->
+<script src="firebase-config.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+  const firebaseConfig = window.FIREBASE_CONFIG;
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Monitor connection state via Firebase Realtime Database (.info/connected)
+  const connectedRef = ref(db, ".info/connected");
+  onValue(connectedRef, (snap) => {
+    const statusEl = document.getElementById('connection-status');
+    const dotEl = document.getElementById('connection-dot');
+    if (snap.val() === true) {
+      if(statusEl) {
+        statusEl.textContent = "Online";
+        statusEl.className = "text-xs font-bold text-emerald-600";
+      }
+    } else {
+      if(statusEl) {
+        statusEl.textContent = "Offline";
+        statusEl.className = "text-xs font-bold text-rose-600";
+      }
+    }
+  });
+</script>
+
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<script>
+lucide.createIcons();
+function tick(){ const el = document.getElementById('live-clock'); if(el) el.textContent = new Date().toLocaleTimeString('en-GB'); }
+tick(); setInterval(tick, 1000);
+function showToast(msg){
+  const toast = document.getElementById('toast');
+  if(!toast) return;
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=> toast.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>
